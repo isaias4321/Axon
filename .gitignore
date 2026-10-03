@@ -1,0 +1,22 @@
+.env
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# Temporary build/runtime logs and test artifacts
+*.err
+test-gemini.json
+.env.test-backup
+
+*.db
+
+# Artefatos gerados por testes E2E reais de execução de ferramentas
+# (escrevem de verdade na raiz do workspace via FilesystemTool)
+/resposta.txt
+/hello.txt
+/axon-test.txt
+
+# Temporary test workspace
+/tmp/

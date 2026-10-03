@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axon — AI Agent Runtime</title>
+  <meta name="description" content="Converse com o agente Axon: execução real de ferramentas, validação e autonomia." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f2a93b' stroke-width='2'><circle cx='5' cy='12' r='2'/><circle cx='19' cy='5' r='1.5'/><circle cx='19' cy='19' r='1.5'/><path d='M7 12h7m-8-1l7-5m-2 7l8 5'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="Navegação lateral">
+      <div class="sidebar-top">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="5" cy="12" r="2.5" fill="currentColor" stroke="none" />
+              <circle cx="19" cy="5" r="2" fill="currentColor" stroke="none" />
+              <circle cx="19" cy="19" r="2" fill="currentColor" stroke="none" />
+              <path d="M7.5 12H13.5 M6 10.5 L13 6 M10.5 13.5 L17.5 18" stroke="currentColor" stroke-width="1.8" />
+            </svg>
+          </span>
+          <span class="brand-name">axon</span>
+          <span class="brand-badge">agent</span>
+        </div>
+
+        <button type="button" class="icon-btn mobile-close-btn" id="sidebar-close-btn" aria-label="Fechar menu lateral">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-action">
+        <button type="button" class="new-chat-btn" id="new-chat-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Nova conversa</span>
+        </button>
+      </div>
+
+      <div class="sidebar-history-container">
+        <div class="history-label">Histórico</div>
+        <div class="sessions-list" id="sessions-list" role="list">
+          <!-- Inserido dinamicamente via JS -->
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="health-indicator" id="health-indicator" title="Status da API Axon">
+          <span class="health-dot" id="health-dot"></span>
+          <span class="health-text" id="health-label">verificando…</span>
+        </div>
+
+        <button type="button" class="footer-btn" id="settings-btn" aria-label="Abrir configurações">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l.06.06A1.65 1.65 0 0 0 19.32 9c.14.36.4.66.73.85.24.14.51.22.79.22H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          <span>Configurações</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <header class="main-header">
+        <div class="main-header-left">
+          <button type="button" class="icon-btn mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menu lateral">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span class="session-title" id="session-title">Nova conversa</span>
+        </div>
+      </header>
+
+      <main class="chat-area" id="chat-area">
+        <div class="transcript-container" id="transcript-container">
+          <div class="transcript" id="transcript" aria-live="polite">
+            <div class="empty-state" id="empty-state">
+              <div class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="5" cy="12" r="2.5" fill="currentColor" stroke="none" />
+                  <circle cx="19" cy="5" r="2" fill="currentColor" stroke="none" />
+                  <circle cx="19" cy="19" r="2" fill="currentColor" stroke="none" />
+                  <path d="M7.5 12H13.5 M6 10.5 L13 6 M10.5 13.5 L17.5 18" stroke="currentColor" />
+                </svg>
+              </div>
+              <h1 class="empty-title">Como o Axon pode agir por você?</h1>
+              <p class="empty-sub">
+                Peça uma análise, criação de arquivos ou comandos reais no sistema. O Axon escolhe as ferramentas e valida os resultados.
+              </p>
+              <div class="suggestions-grid">
+                <button type="button" class="suggestion-card" data-prompt="Crie um arquivo chamado hello.txt contendo Hello from Axon.">
+                  <span class="suggestion-title">Criar arquivo</span>
+                  <span class="suggestion-desc">Crie um arquivo hello.txt contendo Hello from Axon</span>
+                </button>
+                <button type="button" class="suggestion-card" data-prompt="Verifique o status de saúde dos provedores de LLM configurados.">
+                  <span class="suggestion-title">Status dos provedores</span>
+                  <span class="suggestion-desc">Verifique a conexão dos modelos de IA</span>
+                </button>
+                <button type="button" class="suggestion-card" data-prompt="Liste os arquivos do workspace e resuma a estrutura.">
+                  <span class="suggestion-title">Explorar workspace</span>
+                  <span class="suggestion-desc">Liste os arquivos e resuma a estrutura</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Composer Area -->
+        <div class="composer-wrapper">
+          <form class="composer" id="composer">
+            <div class="attachment-preview" id="attachment-preview"></div>
+            <div class="composer-inner">
+              <button type="button" class="attach-btn" id="attach-btn" aria-label="Anexar arquivo" title="Anexar arquivo (.zip, .rar, foto, etc.)">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+              <input type="file" id="file-upload-input" multiple hidden />
+              <textarea
+                id="composer-input"
+                rows="1"
+                placeholder="Descreva a tarefa para o Axon…"
+                aria-label="Mensagem para o agente"
+              ></textarea>
+              <button type="submit" class="send-btn" id="send-btn" aria-label="Enviar mensagem" title="Enviar (Enter)">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+          </form>
+          <div class="composer-footer-note">
+            <span>Shift + Enter para nova linha · Execução de ferramentas e validação reais</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Settings Dialog -->
+  <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+    <div class="settings-box">
+      <div class="settings-header">
+        <h2 id="settings-title">Configurações</h2>
+        <button type="button" class="icon-btn" id="settings-close" aria-label="Fechar configurações">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="settings-content">
+        <!-- API Connection Section -->
+        <section class="settings-section">
+          <h3 class="section-title">Conexão com a API</h3>
+          <div class="field-group">
+            <label class="field" for="base-url-input">
+              <span class="field-label">URL da API</span>
+              <input type="text" id="base-url-input" placeholder="mesma origem (recomendado)" autocomplete="off" />
+            </label>
+            <label class="field" for="api-key-input">
+              <span class="field-label">x-api-key</span>
+              <div class="input-with-action">
+                <input type="password" id="api-key-input" placeholder="dev-key" autocomplete="off" />
+                <button type="button" class="input-action-btn" id="toggle-key-visibility" title="Mostrar/ocultar chave" aria-label="Mostrar ou ocultar chave">
+                  <svg id="eye-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </label>
+            <p class="field-hint">
+              A chave é salva apenas no seu navegador (localStorage) e transmitida diretamente nos cabeçalhos da requisição.
+            </p>
+          </div>
+
+          <div class="settings-row">
+            <span class="conn-status" id="conn-status">não testado</span>
+            <div class="settings-btn-group">
+              <button type="button" class="btn btn-secondary" id="settings-test-conn">Testar conexão</button>
+              <button type="button" class="btn btn-primary" id="settings-save">Salvar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Providers Section -->
+        <section class="settings-section">
+          <div class="section-header-row">
+            <h3 class="section-title">Provedores & Modelos</h3>
+            <button type="button" class="btn-text" id="providers-refresh">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19" />
+              </svg>
+              <span>atualizar</span>
+            </button>
+          </div>
+          <p class="field-hint">
+            Status e latência reais obtidos via <code>/v1/providers/health</code> e <code>/v1/providers/:name/test</code>.
+          </p>
+
+          <div class="providers-list" id="providers-list">
+            <div class="providers-loading">Carregando provedores…</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="settings-footer">
+        <p class="settings-footer-text">
+          Chaves de LLM dos provedores são configuradas no arquivo <code>.env</code> do servidor Axon.
+        </p>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>

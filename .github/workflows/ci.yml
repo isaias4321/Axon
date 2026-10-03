@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # unrar-free: usado por src/lib/compression.ts para LER/EXTRAIR .rar
+      # reais (adm-zip só entende .zip). Instalado aqui pra a suíte exercitar
+      # o caminho de sucesso de verdade, não só o fallback "CLI ausente".
+      - name: Install unrar-free
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends unrar-free
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+        env:
+          REDIS_URL: redis://localhost:6379
