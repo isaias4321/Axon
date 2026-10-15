@@ -25,13 +25,20 @@ when the intent is recognizable — delegates to specialized cognitive cells
 
 ## 🖼️ Demo
 
-The chat interface, running locally:
+The agent analyzing an uploaded project end to end — receiving a `.zip`,
+extracting it, listing the real file tree, and turning individual files
+from inside the archive into clickable download links, live in the
+execution trace:
 
-<!-- TODO: add a real screenshot of the UI at docs/chat-ui.png before
-     publishing (run `npm run dev`, open http://localhost:3000, take the
-     screenshot) and replace the line below with:
-     ![Axon's chat interface, showing a conversation with the agent and the execution trace in the sidebar](docs/chat-ui.png)
--->
+<video src="docs/agent-demo.mp4" controls width="700">
+  Your browser doesn't support embedded video — see the file at
+  <a href="docs/agent-demo.mp4">docs/agent-demo.mp4</a>.
+</video>
+
+The settings panel — API key, base URL, and live provider/model status
+(checked against `/v1/providers/health` and `/v1/providers/:name/test`):
+
+![Axon's settings panel, showing the API connection fields and live status for OpenAI, Anthropic, Gemini and Groq](docs/settings-providers.png)
 
 Browsing the interactive documentation (Swagger UI):
 
@@ -432,6 +439,37 @@ about where it can still improve:
   `/v1/observability/*` routes.
 - **No live public deployment** — the `Dockerfile` and deployment steps
   are ready, but the demo runs locally/via Docker.
+- **Can't *create* real `.rar` archives.** There is no free/open-source RAR
+  encoder — only decoders. When asked to produce a `.rar`, the agent
+  explains this and delivers an equivalent `.zip` instead. *Reading*
+  existing `.rar` files works (via `unrar-free`, installed in the
+  Dockerfile), but that tool has incomplete support for newer RAR5
+  compression or strongly-encrypted archives — some real-world `.rar`
+  files may still fail to list/extract.
+- **No text-to-image generation.** `ImageTool` only edits images that
+  already exist in the workspace (resize/crop/filter/format) — there's no
+  diffusion/generation model wired in. Asking for a brand-new image gets an
+  honest explanation plus a ready-to-use prompt for an external generator,
+  not a tool failure loop.
+- **Tool arguments are derived with regex over short plan-step text, not
+  native LLM function-calling** (see `buildToolInput` in `executor.ts`).
+  This is reliable for simple, single-file actions, but brittle for
+  anything needing several concrete file paths or real code content from
+  one short sentence — which is exactly why generating a multi-file
+  project has its own dedicated path (`projectScaffold.ts`) that asks the
+  LLM for structured JSON directly instead of going through the step
+  loop. Other multi-step tool chains don't have that treatment yet.
+- **Session memory and artifact tracking live in SQLite, but
+  `docker-compose.yml` doesn't mount a volume for it.** Conversation
+  history and "current project/artifact" context reset on
+  `docker compose down` / container recreation unless you add a volume
+  for the data directory (`DATA_DIR`, see `src/lib/db/paths.ts`).
+- **Small/fast models can misjudge task completion.** The default routed
+  model for simple steps is a small open-weight model (e.g. Groq's
+  `gpt-oss-20b`); it occasionally conflates "listed the filenames in an
+  archive" with "read the files' contents," reporting a task done when it
+  only did the former. This is a model-reasoning limitation, not a logic
+  bug — the tools themselves correctly distinguish listing from reading.
 
 ## 🗺️ Possible next steps
 

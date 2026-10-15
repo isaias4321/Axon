@@ -25,13 +25,21 @@ quando o intent é conhecido, delega para células cognitivas especializadas
 
 ## 🖼️ Demo
 
-A interface de chat, rodando localmente:
+O agente analisando um projeto enviado, de ponta a ponta — recebendo um
+`.zip`, extraindo, listando a árvore de arquivos real, e transformando
+arquivos individuais de dentro do zip em links de download clicáveis, ao
+vivo no trace de execução:
 
-<!-- TODO: adicione um print real da UI em docs/chat-ui.png antes de publicar
-     (rode `npm run dev`, abra http://localhost:3000, tire o print) e troque
-     a linha abaixo por:
-     ![Interface de chat do Axon, mostrando uma conversa com o agente e o trace de execução na lateral](docs/chat-ui.png)
--->
+<video src="docs/agent-demo.mp4" controls width="700">
+  Seu navegador não suporta vídeo embutido — veja o arquivo em
+  <a href="docs/agent-demo.mp4">docs/agent-demo.mp4</a>.
+</video>
+
+O painel de configurações — chave de API, URL base, e status ao vivo de
+provedores/modelos (checado via `/v1/providers/health` e
+`/v1/providers/:name/test`):
+
+![Painel de configurações do Axon, mostrando os campos de conexão com a API e o status ao vivo de OpenAI, Anthropic, Gemini e Groq](docs/settings-providers.png)
 
 Navegação pela documentação interativa (Swagger UI):
 
@@ -428,6 +436,40 @@ sobre onde ele ainda pode evoluir:
   `/v1/observability/*`.
 - **Sem deploy público ativo** — o `Dockerfile` e o passo a passo de deploy
   estão prontos, mas a demo roda localmente/via Docker.
+- **Não consegue *criar* arquivos `.rar` de verdade.** Não existe
+  codificador de RAR livre/open-source — só decodificadores. Quando pedem
+  um `.rar`, o agente explica isso e entrega um `.zip` equivalente.
+  *Ler* arquivos `.rar` já existentes funciona (via `unrar-free`, instalado
+  no Dockerfile), mas essa ferramenta tem suporte incompleto a RAR5 mais
+  novo ou arquivos fortemente criptografados — alguns `.rar` reais ainda
+  podem falhar ao listar/extrair.
+- **Sem geração de imagem a partir de texto.** A `ImageTool` só edita
+  imagens que já existem no workspace (redimensionar/cortar/filtro/
+  formato) — não há nenhum modelo de difusão/geração plugado. Pedir uma
+  imagem nova do zero recebe uma explicação honesta mais um prompt pronto
+  pra usar num gerador externo, não um loop de falha de ferramenta.
+- **Os parâmetros de tool são derivados por regex sobre o texto curto de
+  cada etapa do plano, não por function-calling nativo do LLM** (ver
+  `buildToolInput` em `executor.ts`). Isso é confiável para ações simples
+  de um arquivo só, mas frágil para qualquer coisa que precise de vários
+  caminhos de arquivo concretos ou conteúdo de código real a partir de uma
+  frase curta — motivo exato pelo qual gerar um projeto com vários
+  arquivos tem um caminho dedicado próprio (`projectScaffold.ts`) que pede
+  JSON estruturado direto ao LLM em vez de passar pelo loop de etapas.
+  Outras cadeias de tools com várias etapas ainda não têm esse tratamento.
+- **Memória de sessão e rastreamento de artefatos vivem no SQLite, mas o
+  `docker-compose.yml` não monta um volume pra isso.** O histórico da
+  conversa e o contexto de "projeto/artefato atual" resetam a cada
+  `docker compose down`/recriação do container, a menos que você adicione
+  um volume para o diretório de dados (`DATA_DIR`, ver
+  `src/lib/db/paths.ts`).
+- **Modelos pequenos/rápidos podem errar o julgamento de conclusão da
+  tarefa.** O modelo roteado por padrão para etapas simples é um modelo
+  aberto pequeno (ex.: `gpt-oss-20b` da Groq); ele às vezes confunde
+  "listei os nomes de arquivo de um zip" com "li o conteúdo dos arquivos",
+  reportando uma tarefa como concluída quando só fez a primeira coisa.
+  Isso é uma limitação de raciocínio do modelo, não um bug de lógica — as
+  próprias tools distinguem corretamente listar de ler.
 
 ## 🗺️ Possíveis evoluções
 
